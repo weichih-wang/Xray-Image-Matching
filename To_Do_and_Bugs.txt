@@ -1,0 +1,14 @@
+To-do List:
+
+1) Find an algorithm to find optimal contrast settings
+	- currently we have a good ballpark for each xray
+	- can find a threshold using some kind of 
+
+2) Find an algorithm to find the optimal croppings
+	- currently just do manual croppings
+
+3) Process the border/edges after contrast and find location of femoral head/sacral plate
+	- cross correlation and find xOffSet, yOffSet with peak of normxcross2, should find ballpark of places
+
+4) Calculate necessary parameters
+	- after finish number 3

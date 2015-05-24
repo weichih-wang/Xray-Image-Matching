@@ -1,0 +1,29 @@
+% function I = Test1(img)
+% I = imread(img);
+I = imread('0061_AP_1.11.10.jpg');
+K = imadjust(I,[0.509; 0.843],[]);
+Igrey = rgb2gray(K);
+% figure(1);
+% imshow(I);
+% figure(2);
+% imshow(Igrey);
+Iedge = edge(Igrey,'canny',[0 .2]);
+figure(3);
+imshow(Iedge);
+
+% figure(4);
+J = imadjust(I,stretchlim(I),[]);
+% imshow(I), figure, imshow(J)
+
+
+%ICROP
+% figure(5);
+Icrop = imcrop(Iedge, [900 3400 900 6000]);
+% imshow(Icrop);
+
+figure(6);
+imshow(Icrop);
+
+
+% imcontrast; %Window Minimum 120 Maximum 200 Width 80 Center 160
+%Eliminate Outliers: 5% Min: 130 Max: 215 Width: 85 Center: 170

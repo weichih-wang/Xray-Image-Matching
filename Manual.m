@@ -1,0 +1,52 @@
+%% Runs through image contrasting with manual crop --> saves into database
+function Ires = Manual(img) % imadjust (img, contrast1, contrast2)
+% close all;
+% clc;
+
+I = imread(img); %reads image and assigns variable
+Igrey = rgb2gray(I); %convert to grey (justincase)
+% figure(1); %new figure
+% imshow(I); %shows original
+figure(2);
+imshow(Igrey); %shows greyscale
+% Iedge = edge(Igrey,'canny',[0 .2]); %Canny & sobel %attempt
+% figure(3);
+% imshow(Iedge);
+
+%ICROP
+figure(3);
+Icrop = imcrop(Igrey);
+imshow(Icrop); %self-defined crop
+
+fileName = strcat(img,'_fHead_original');
+savefig(strcat('Database/',fileName,'.jpg'));
+
+figure(4);
+imshow(Icrop);
+
+% Ires = imcontrast; %Window Minimum 120 Maximum 200 Width 80 Center 160
+% Ires = imadjust(Icrop,[0.5 0.84]);
+Ires = imadjust(Icrop,[0.5 0.84], [0.5,0.85]);
+imshow(Ires);
+
+Iedge_c = edge(Ires,'canny',[0 .2]);
+
+imshow(Iedge_c);
+
+fileName = strcat(img,'_fHead_canny');
+savefig(strcat('Database/',fileName,'.jpg'));
+
+figure(5);
+s  = regionprops(Iedge_c, 'centroid');
+centroids = cat(1, s.Centroid);
+imshow(Iedge_c);
+hold on;
+plot(centroids(:,1), centroids(:,2), 'b*');
+hold off;
+fileName = strcat(img,'_fHead_centroids');
+savefig(strcat('Database/',fileName,'.jpg'));
+
+% IcropN = imadjust(Icrop,
+% Eliminate Outliers: 5% Min: 130 Max: 215 Width: 85 Center: 170
+
+%For LAT --> 
