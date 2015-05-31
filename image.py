@@ -10,15 +10,26 @@ import threading
 """
 Main class:
     Converts jpg images to 2d array gradients
+    
+    Still needs work on:
+        implement multithreading to reduce run time
+        change some numbers such as intensity and diff so only bone structures will be shown
+        find a way to remove bone structues that are not part of the spinal cord
+        find a new gradient algorithm that might work better than this one
+        
 """
 class IndivGradient:
     """
     contrast refers to the different ways to find contrast differences for each pixel
     res refers to resolution decrease (e.g. res=.5 will decrease size+resolution of image by 50%)
-    Note: new method of removing surrounding similar pixels when removing pixels is still working progress.
-    It is also extremely slow. Keep grad_clean option disabled until later.
+    file1 refers to file name
+    grad_clean is a boolean variable to determine if you want to remove similar nearby pixels that might not have
+    been removed with simple pixel intensity remove (removes issue with borders being created if the nearby pixel
+    is barely above the intensity threshhold)
+    diff (used in cleaning similar intensity values near threshhold function) refers to how close the intensity
+    values of neighboring pixels have to be to be removed from the image
     """
-    def __init__(self, file1,contrast=0, res=1,grad_clean = False):
+    def __init__(self, file1,contrast=0, res=1,grad_clean = False, intensity, diff=0):
         self.file = file1
         self.image = Image.open(file1)                               #original image
         self.image = self.image.resize((int(self.image.size[0]*res)
@@ -26,11 +37,12 @@ class IndivGradient:
         arr = np.asarray(self.image)        
         self.row = arr.shape[0]                                      #row size of image
         self.col = arr.shape[1]                                      #column size of image   
+        self.grad_clean=grad_clean
         self.copy = np.copy(arr)         
         if grad_clean == False:
-            self.removeLowGradient(125,arr=self.copy)                    #removes some tissues that screws up calculations
+            self.removeLowGradient(intensity,arr=self.copy)                    #removes some tissues that screws up calculations
         else:
-            self.removeLowGradientAndSim(125,arr=self.copy, diff_am=5)
+            self.removeLowGradientAndSim(intensity,arr=self.copy, diff_am=diff)
         self.gradient = np.empty(arr.shape)                          #original gradient change
         self.mod_gradient = np.empty(arr.shape)                      #modified gradient change
         if contrast == 0:
@@ -91,6 +103,10 @@ class IndivGradient:
                     self.helperRemLowGrad(i+1,j,clear,arr,diff_am,intensity)
                     self.helperRemLowGrad(i,j-1,clear,arr,diff_am,intensity)
                     self.helperRemLowGrad(i,j+1,clear,arr,diff_am,intensity)
+                for k,l in clear:
+                    arr[k,l][0]=0
+                    arr[k,l][1]=0
+                    arr[k,l][2]=0
     
     def helperRemLowGrad(self, i, j, pixels, im_arr, val, intensity):
         if len(pixels)>500:
@@ -98,7 +114,7 @@ class IndivGradient:
         #helper method to remove pixels that are too similar to ones being removed
         if i < 0 or j < 0 or (i,j) in pixels or j >= self.col or i >= self.row:
             return
-        if im_arr[i,j][0]==intensity:
+        if im_arr[i,j][0]==0:
             return
         value = [0]
         if j != 0:                                                 #calculates gradient of above pixel
@@ -137,7 +153,7 @@ class IndivGradient:
     def saveGradImage(self, orig = False):
         #saves gradient image
         im = Image.fromarray(np.uint8(self.gradient))
-        im.save((self.file[:-4]+'TEST.jpg'))
+        im.save((self.file[:-4]+'TEST'+str(self.grad_clean)+'.jpg'))
     
     def removeGrad(self, x, y, row, col):
         #removes gradient of row*col at x and y coordinates
@@ -156,14 +172,21 @@ class IndivGradient:
                 val = int(self.mod_gradient[i,j][0]*scale)
                 self.mod_gradient[i][j][0],self.mod_gradient[i][j][1],self.mod_gradient[i][j][2]=val,val,val
 
-''' 
-files = [f for f in os.listdir('./') if os.path.isfile(f)]
-i = re.compile('.*AP.*(?<!TEST)\.jpg$')                                #regex for frontal images
-lst = [f for f in files if i.match(f)]
-'''
+def main():
+    files = [f for f in os.listdir('./') if os.path.isfile(f)]
+    i = re.compile('.*AP.*(?<!TEST)\.jpg$')                                #regex for frontal images
+    lst = [f for f in files if i.match(f)]
+    for f in lst:
+        IndivGradient(f,res=.5, grad_clean=True, intensity = 140, diff=5)        
+        IndivGradient(f,res=.5, grad_clean=False, intensity = 125)
 
-                          
-a=IndivGradient("C:/Users/Standard.Admin-THINK.000/Desktop/Xray-Image-Matching-master/Xray-Image-Matching-master/0009_AP_4.5.10.jpg", res = .25)
+
+if __name__ == "__main__":   
+    main()           
+                                                        
+#a=IndivGradient("C:/Users/Standard.Admin-THINK.000/Desktop/Xray-Image-Matching-master/Xray-Image-Matching-master/0009_AP_4.5.10.jpg", res = .25, grad_clean=True)
 #image = Image.open("C:/Users/Standard.Admin-THINK.000/Desktop/Xray-Image-Matching-master/Xray-Image-Matching-master/0009_AP_4.5.10.jpg")
 #im_arr = np.asarray(image)    
+
+#def __main__(
 
